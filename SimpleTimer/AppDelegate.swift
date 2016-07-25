@@ -111,7 +111,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSUserNot
     func showNotification() -> Void {
         print("NOTIFICATION")
         let notification = NSUserNotification()
-        notification.title = "Simple Timer"
+        notification.title = "SimpleTimer"
         notification.informativeText = "It is about time!"
         //        notification.soundName = NSUserNotificationDefaultSoundName
         NSUserNotificationCenter.defaultUserNotificationCenter().deliverNotification(notification)
