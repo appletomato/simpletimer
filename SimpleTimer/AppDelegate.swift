@@ -37,7 +37,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSUserNot
             button.image = NSImage(named: "StatusBarButtonImage")
             button.action = #selector(statusItemClicked)
             button.target = self
-            button.sendActionOn(Int(NSEventMask.RightMouseUpMask.rawValue | NSEventMask.LeftMouseDownMask.rawValue))
+            button.sendActionOn(NSEventMask(rawValue: UInt64(Int(NSEventMask.RightMouseUp.rawValue | NSEventMask.LeftMouseDown.rawValue))))
         }
         
     }

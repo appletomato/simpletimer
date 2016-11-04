@@ -200,7 +200,7 @@ class CircularSlider: NSControl {
         
         
         // Draw the gradient
-        CGContextDrawLinearGradient(ctx, gradient, startPoint, endPoint, []);
+        CGContextDrawLinearGradient(ctx, gradient!, startPoint, endPoint, []);
         CGContextRestoreGState(ctx);
         
         
