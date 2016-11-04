@@ -334,6 +334,7 @@ class CircularSlider: NSControl {
             
             
             timerField.editable = true
+            timerField.selectText(nil)
             setNeedsDisplay()
             
             
