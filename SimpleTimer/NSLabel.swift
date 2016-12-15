@@ -15,10 +15,10 @@ class NSLabel: NSTextField {
         
         super.init(frame: frame)
         
-        self.bezeled = false
-        self.editable = false
+        self.isBezeled = false
+        self.isEditable = false
         self.drawsBackground = false
-        self.selectable = false
+        self.isSelectable = false
     }
     
     

@@ -10,8 +10,8 @@ import Cocoa
 
 @IBDesignable class CircularSliderView: NSView {
     
-    @IBInspectable var startColor:NSColor = NSColor.blueColor()
-    @IBInspectable var endColor:NSColor = NSColor.redColor()
+    @IBInspectable var startColor:NSColor = NSColor.blue
+    @IBInspectable var endColor:NSColor = NSColor.red
     
     
     override func awakeFromNib() {

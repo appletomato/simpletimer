@@ -20,7 +20,7 @@ struct Config {
     static let CS_TIME_FIELD_FONTSIZE:CGFloat = 20.0
     static let CS_ALARM_TIME_FIELD_FONTSIZE:CGFloat = 12.0
     static let CS_LINE_WIDTH:CGFloat = 5.0
-    static let CS_SAFEAREA_PADDING:CGFloat = 8.0
+    static let CS_SAFEAREA_PADDING:CGFloat = 4.0
     static let CS_SENSITIVITY_IN_DECASECONDS:Int = 6
 }
 
@@ -30,11 +30,11 @@ class CircularSlider: NSControl {
     
     var timerField:NSLabel!
     var alarmTimeField:NSLabel!
-    var myTimer: NSTimer?
+    var myTimer: Timer?
     var angle:Int = 0
     var radius:CGFloat?
-    var startColor = NSColor.blueColor()
-    var endColor = NSColor.redColor()
+    var startColor = NSColor.blue
+    var endColor = NSColor.red
     var secondsLeft:Int = 0
     var arcDirection:Int32 = 1
     var alarmIsDue:Bool = false
@@ -61,48 +61,48 @@ class CircularSlider: NSControl {
         
         /** timeField for displaying remaining time **/
         
-        let timeFieldFont = NSFont.monospacedDigitSystemFontOfSize(Config.CS_TIME_FIELD_FONTSIZE, weight: NSFontWeightRegular)
+        let timeFieldFont = NSFont.monospacedDigitSystemFont(ofSize: Config.CS_TIME_FIELD_FONTSIZE, weight: NSFontWeightRegular)
         let timeStr = "HHH:MM" as NSString
-        let timeFieldFontSize:CGSize = timeStr.sizeWithAttributes([NSFontAttributeName:timeFieldFont])
+        let timeFieldFontSize:CGSize = timeStr.size(withAttributes: [NSFontAttributeName:timeFieldFont])
         
         
-        let timeFieldRect = CGRectMake(
-            (frame.size.width  - timeFieldFontSize.width) / 2.0,
-            (frame.size.height - timeFieldFontSize.height) / 2.0,
-            timeFieldFontSize.width, timeFieldFontSize.height);
+        let timeFieldRect = CGRect(
+            x: (frame.size.width  - timeFieldFontSize.width) / 2.0,
+            y: (frame.size.height - timeFieldFontSize.height) / 2.0,
+            width: timeFieldFontSize.width, height: timeFieldFontSize.height);
         
         
         timerField = NSLabel(frame: timeFieldRect)
         
-        timerField?.editable = true
+        timerField?.isEditable = true
         timerField?.target = self
         timerField?.action = #selector(enterTimerField)
-        timerField?.textColor = NSColor.blackColor()
-        timerField?.alignment = .Center
+        timerField?.textColor = NSColor.black
+        timerField?.alignment = .center
         timerField?.font = timeFieldFont
         timerField?.stringValue = "0:00"
-        timerField?.focusRingType = NSFocusRingType.None
+        timerField?.focusRingType = NSFocusRingType.none
         
         addSubview(timerField!)
         
         
         /** alarmTimeField for displaying alarm time **/
         
-        let alarmTimeFieldFont = NSFont.monospacedDigitSystemFontOfSize(Config.CS_ALARM_TIME_FIELD_FONTSIZE, weight: NSFontWeightRegular)
+        let alarmTimeFieldFont = NSFont.monospacedDigitSystemFont(ofSize: Config.CS_ALARM_TIME_FIELD_FONTSIZE, weight: NSFontWeightRegular)
         let alarmStr = "HH:MM:SS" as NSString
-        let alarmTimeFieldFontSize:CGSize = alarmStr.sizeWithAttributes([NSFontAttributeName:alarmTimeFieldFont])
+        let alarmTimeFieldFontSize:CGSize = alarmStr.size(withAttributes: [NSFontAttributeName:alarmTimeFieldFont])
         
         
-        let alarmTimeFieldRect = CGRectMake(
-            (frame.size.width  - alarmTimeFieldFontSize.width) / 2.0,
-            (frame.size.height - alarmTimeFieldFontSize.height) / 2.0 - timeFieldFontSize.height,
-            alarmTimeFieldFontSize.width, 1.25 * alarmTimeFieldFontSize.height);
+        let alarmTimeFieldRect = CGRect(
+            x: (frame.size.width  - alarmTimeFieldFontSize.width) / 2.0,
+            y: (frame.size.height - alarmTimeFieldFontSize.height) / 2.0 - timeFieldFontSize.height,
+            width: alarmTimeFieldFontSize.width, height: 1.25 * alarmTimeFieldFontSize.height);
         
         
         alarmTimeField = NSLabel(frame:alarmTimeFieldRect)
         
-        alarmTimeField?.textColor = NSColor.darkGrayColor()
-        alarmTimeField?.alignment = .Center
+        alarmTimeField?.textColor = NSColor.darkGray
+        alarmTimeField?.alignment = .center
         alarmTimeField?.font = alarmTimeFieldFont
         alarmTimeField?.stringValue = "--:--"
         
@@ -116,110 +116,55 @@ class CircularSlider: NSControl {
     
     
     /** Use the draw rect to draw the Background, the Circle and the Handle **/
-    override func drawRect(rect: CGRect) {
-        super.drawRect(rect)
+    override func draw(_ rect: CGRect) {
+        super.draw(rect)
         
         
-        let ctx = NSGraphicsContext.currentContext()!.CGContext
+        let ctx = NSGraphicsContext.current()!.cgContext
         
         
         // Draw the background
-        CGContextAddArc(ctx, CGFloat(self.frame.size.width / 2.0), CGFloat(self.frame.size.height / 2.0), radius!, 0, CGFloat(M_PI * 2), arcDirection)
+        ctx.addArc(center: CGPoint(x: CGFloat(self.frame.size.width/2), y: CGFloat(self.frame.size.height/2)), radius: 5*radius!, startAngle: 0, endAngle: CGFloat(M_PI*2.0), clockwise: true)
         
         
         // Set fill/stroke color
         if (alarmIsDue) {
             NSColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0).set()
         } else {
-            NSColor.clearColor().set()
+            NSColor.clear.set()
         }
         
-        
-        // Set line info
-        CGContextSetLineWidth(ctx, frame.size.width)
-        CGContextSetLineCap(ctx, CGLineCap.Butt)
-        CGContextDrawPath(ctx, CGPathDrawingMode.FillStroke)
+        ctx.setLineWidth(Config.CS_LINE_WIDTH)
+        ctx.drawPath(using: CGPathDrawingMode.fillStroke)
         
         
-        // Create THE MASK Image
-        let anImage = NSImage(size: CGSizeMake(self.bounds.size.width, self.bounds.size.height))
-        anImage.lockFocus()
-        let imageCtx = NSGraphicsContext.currentContext()!.CGContext
         
+        // Draw the time indicator
+        ctx.addArc(center: CGPoint(x: CGFloat(self.frame.size.width/2), y: CGFloat(self.frame.size.height/2)), radius: radius!, startAngle: CGFloat(M_PI/2.0), endAngle: CGFloat(-1.0*DegreesToRadians(Double(angle))+M_PI/2.0), clockwise: Bool(arcDirection as NSNumber))
         
-        if (angle >= 0) {
-            // draw clockwise
-            arcDirection = 1
-        } else {
-            // draw counter-clockwise
-            arcDirection = 0
-        }
+    
+    
+        NSColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0).set()
+    
+        ctx.setLineWidth(Config.CS_LINE_WIDTH)
+        ctx.setLineCap(CGLineCap.butt)
+        ctx.setStrokeColor(NSColor.orange.cgColor)
+        ctx.drawPath(using: CGPathDrawingMode.fillStroke)
         
-        
-        CGContextAddArc(imageCtx, CGFloat(self.frame.size.width/2)  , CGFloat(self.frame.size.height/2), radius!, CGFloat(M_PI/2.0), CGFloat(-1.0*DegreesToRadians(Double(angle))+M_PI/2.0), arcDirection);
-        NSColor.redColor().set()
-        
-        
-        // Use shadow to create the Blur effect
-        CGContextSetShadowWithColor(imageCtx, CGSizeMake(0, 0), CGFloat(self.angle/15), NSColor.blackColor().CGColor);
-        
-        
-        // Define the path
-        CGContextSetLineWidth(imageCtx, Config.CS_LINE_WIDTH)
-        CGContextDrawPath(imageCtx, CGPathDrawingMode.Stroke)
-        
-        
-        // Save the context content into the image mask
-        let mask:CGImageRef = CGBitmapContextCreateImage(NSGraphicsContext.currentContext()!.CGContext)!
-        anImage.unlockFocus()
-        
-        
-        // Clip Context to the mask
-        CGContextSaveGState(ctx)
-        CGContextClipToMask(ctx, self.bounds, mask)
-        
-        
-        // Split colors in components (rgba)
-        let startColorComps:UnsafePointer<CGFloat> = CGColorGetComponents(startColor.CGColor);
-        let endColorComps:UnsafePointer<CGFloat> = CGColorGetComponents(endColor.CGColor);
-        
-        let components : [CGFloat] = [
-            startColorComps[0], startColorComps[1], startColorComps[2], 1.0,     // Start color
-            endColorComps[0], endColorComps[1], endColorComps[2], 1.0      // End color
-        ]
-        
-        
-        // Setup the gradient
-        let baseSpace = CGColorSpaceCreateDeviceRGB()
-        let gradient = CGGradientCreateWithColorComponents(baseSpace, components, nil, 2)
-        
-        
-        // Gradient direction
-        let startPoint = CGPointMake(CGRectGetMinX(rect), CGRectGetMidY(rect))
-        let endPoint = CGPointMake(CGRectGetMaxX(rect), CGRectGetMidY(rect))
-        
-        
-        // Draw the gradient
-        CGContextDrawLinearGradient(ctx, gradient!, startPoint, endPoint, []);
-        CGContextRestoreGState(ctx);
-        
-        
+
         // Draw the handle
-        CGContextSaveGState(ctx);
-        
-        
-        // Shadow
-        CGContextSetShadowWithColor(ctx, CGSizeMake(0, 0), 3, NSColor.blackColor().CGColor);
-        
-        
-        // Get the handle position
         let handleCenter = pointFromAngle(angle-90)
+
+        
+        NSColor.darkGray.set()
+        
+        ctx.addArc(center: CGPoint(x: handleCenter.x, y: handleCenter.y), radius: Config.CS_LINE_WIDTH/2.0+1.0, startAngle: 0, endAngle: CGFloat(M_PI*2.0), clockwise: true)
+        
+        ctx.setLineWidth(1.0)
+        ctx.setStrokeColor(NSColor.white.cgColor)
+        ctx.drawPath(using: CGPathDrawingMode.fillStroke)
         
         
-        // Draw
-        NSColor.whiteColor().set();
-        CGContextFillEllipseInRect(ctx, CGRectMake(handleCenter.x, handleCenter.y, Config.CS_LINE_WIDTH, Config.CS_LINE_WIDTH));
-        CGContextRestoreGState(ctx);
     }
     
     
@@ -243,7 +188,7 @@ class CircularSlider: NSControl {
     
     
     
-    func moveHandle(lastPoint:CGPoint){
+    func moveHandle(_ lastPoint:CGPoint){
         
         
         // Handle cannot be moved if timer is busy
@@ -256,7 +201,7 @@ class CircularSlider: NSControl {
         let w:Int = angle / 360
         
         
-        let centerPoint:CGPoint  = CGPointMake(self.frame.size.width/2, self.frame.size.height/2);
+        let centerPoint:CGPoint  = CGPoint(x: self.frame.size.width/2, y: self.frame.size.height/2);
         let currentAngle:Double = AngleFromNorth(centerPoint, p2: lastPoint, flipped: false);
         let angleInt = 360 - (Int(floor(currentAngle)) / Config.CS_SENSITIVITY_IN_DECASECONDS) * Config.CS_SENSITIVITY_IN_DECASECONDS
         
@@ -295,15 +240,15 @@ class CircularSlider: NSControl {
     
     
     
-    override func mouseDragged(theEvent: NSEvent) {
-        super.mouseDragged(theEvent)
+    override func mouseDragged(with theEvent: NSEvent) {
+        super.mouseDragged(with: theEvent)
         let lastPoint: NSPoint = theEvent.locationInWindow
         self.moveHandle(lastPoint)
     }
     
     
     
-    override func mouseDown(theEvent: NSEvent) {
+    override func mouseDown(with theEvent: NSEvent) {
         if theEvent.clickCount == 1 {
             return
         }
@@ -333,7 +278,7 @@ class CircularSlider: NSControl {
             }
             
             
-            timerField.editable = true
+            timerField.isEditable = true
             timerField.selectText(nil)
             setNeedsDisplay()
             
@@ -351,12 +296,12 @@ class CircularSlider: NSControl {
         } else {
             
             // Timer not yet running, start it
-            myTimer = NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: #selector(timerTask), userInfo: nil, repeats: true)
+            myTimer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(timerTask), userInfo: nil, repeats: true)
             
             secondsLeft = readTimerField()
             
-            timerField.editable = false
-            timerField.selectable = false
+            timerField.isEditable = false
+            timerField.isSelectable = false
             timerField.window?.makeFirstResponder(nil)
             timerField.resignFirstResponder()
             
@@ -406,7 +351,7 @@ class CircularSlider: NSControl {
         
         
         if (secondsLeft == 0) && (modusString == "countDownMode") {
-            let appDelegate = NSApplication.sharedApplication().delegate as! AppDelegate
+            let appDelegate = NSApplication.shared().delegate as! AppDelegate
             
             if (!alarmIsDue) {
                 alarmIsDue = true
@@ -459,13 +404,13 @@ class CircularSlider: NSControl {
             resetAlarmTimeField()
         } else {
             let additionalSecs = readTimerField()
-            let currentDate = NSDate()
-            let calculatedDate = currentDate.dateByAddingTimeInterval(Double(additionalSecs))
+            let currentDate = Date()
+            let calculatedDate = currentDate.addingTimeInterval(Double(additionalSecs))
             
-            let dateFormatter = NSDateFormatter()
+            let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "HH:mm"
             
-            alarmTimeField!.stringValue = dateFormatter.stringFromDate(calculatedDate)
+            alarmTimeField!.stringValue = dateFormatter.string(from: calculatedDate)
         }
     }
     
@@ -481,9 +426,9 @@ class CircularSlider: NSControl {
         let timeString = timerField.stringValue
         
         // Test if timeString is valid input of the form MM:SS
-        let charset = NSCharacterSet(charactersInString: ":")
+        let charset = CharacterSet(charactersIn: ":")
         
-        if timeString.rangeOfCharacterFromSet(charset) != nil {
+        if timeString.rangeOfCharacter(from: charset) != nil {
             
             let timeStringArr = timeString.characters.split{$0 == ":"}.map(String.init)
             
@@ -509,23 +454,23 @@ class CircularSlider: NSControl {
     // MARK: Math Helpers
     
     
-    func DegreesToRadians (value:Double) -> Double {
+    func DegreesToRadians (_ value:Double) -> Double {
         return value * M_PI / 180.0
     }
     
-    func RadiansToDegrees (value:Double) -> Double {
+    func RadiansToDegrees (_ value:Double) -> Double {
         return value * 180.0 / M_PI
     }
     
-    func Square (value:CGFloat) -> CGFloat {
+    func Square (_ value:CGFloat) -> CGFloat {
         return value * value
     }
     
     
     
     // Calculate the direction in degrees from a center point to an arbitrary position.
-    func AngleFromNorth(p1:CGPoint , p2:CGPoint , flipped:Bool) -> Double {
-        var v:CGPoint  = CGPointMake(p2.x - p1.x, p2.y - p1.y)
+    func AngleFromNorth(_ p1:CGPoint , p2:CGPoint , flipped:Bool) -> Double {
+        var v:CGPoint  = CGPoint(x: p2.x - p1.x, y: p2.y - p1.y)
         let vmag:CGFloat = Square(Square(v.x) + Square(v.y))
         var result:Double = 0.0
         v.x /= vmag;
@@ -538,11 +483,11 @@ class CircularSlider: NSControl {
     
     
     // Given the angle, get the point position on circumference
-    func pointFromAngle(angleInt:Int)->CGPoint{
+    func pointFromAngle(_ angleInt:Int)->CGPoint{
         
-        let centerPoint = CGPointMake(self.frame.size.width/2.0 - Config.CS_LINE_WIDTH/2.0, self.frame.size.height/2.0 - Config.CS_LINE_WIDTH/2.0);
+        let centerPoint = CGPoint(x: self.frame.size.width/2.0, y: self.frame.size.height/2.0);
         
-        var result:CGPoint = CGPointZero
+        var result:CGPoint = CGPoint.zero
         let y = round(Double(radius!) * sin(DegreesToRadians(Double(-angleInt)))) + Double(centerPoint.y)
         let x = round(Double(radius!) * cos(DegreesToRadians(Double(-angleInt)))) + Double(centerPoint.x)
         result.y = CGFloat(y)

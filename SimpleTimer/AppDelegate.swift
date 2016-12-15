@@ -15,13 +15,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSUserNot
     @IBOutlet weak var window: NSWindow!
     
     
-    let statusItem = NSStatusBar.systemStatusBar().statusItemWithLength(-2)
+    let statusItem = NSStatusBar.system().statusItem(withLength: -2)
     var mainViewController: MainViewController? = MainViewController()
     
     
     lazy var popover: NSPopover = {
         let popover = NSPopover()
-        popover.behavior = .Semitransient
+        popover.behavior = .semitransient
         popover.contentViewController = MainViewController(nibName: "MainViewController", bundle: nil)
         popover.delegate = self
         popover.appearance = NSAppearance(named: NSAppearanceNameAqua)!
@@ -29,61 +29,61 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSUserNot
     }()
     
     
-    func applicationDidFinishLaunching(aNotification: NSNotification) {
+    func applicationDidFinishLaunching(_ aNotification: Notification) {
         
-        NSUserNotificationCenter.defaultUserNotificationCenter().delegate = self
+        NSUserNotificationCenter.default.delegate = self
         
         if let button = statusItem.button {
             button.image = NSImage(named: "StatusBarButtonImage")
             button.action = #selector(statusItemClicked)
             button.target = self
-            button.sendActionOn(NSEventMask(rawValue: UInt64(Int(NSEventMask.RightMouseUp.rawValue | NSEventMask.LeftMouseDown.rawValue))))
+            button.sendAction(on: NSEventMask(rawValue: UInt64(Int(NSEventMask.rightMouseUp.rawValue | NSEventMask.leftMouseDown.rawValue))))
         }
         
     }
     
     
-    func quit(send: AnyObject?) {
+    func quit(_ send: AnyObject?) {
         NSLog("Exit")
-        NSApplication.sharedApplication().terminate(nil)
+        NSApplication.shared().terminate(nil)
     }
     
     
     
-    func popoverShouldDetach(popover: NSPopover) -> Bool {
+    func popoverShouldDetach(_ popover: NSPopover) -> Bool {
         return true
     }
     
     
-    func showPopover(sender: AnyObject?) {
+    func showPopover(_ sender: AnyObject?) {
         if let button = statusItem.button {
-            popover.showRelativeToRect(button.bounds, ofView: button, preferredEdge: NSRectEdge.MinY)
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: NSRectEdge.minY)
         }
     }
     
     
-    func hidePopover(sender: AnyObject?) {
+    func hidePopover(_ sender: AnyObject?) {
         popover.performClose(sender)
     }
     
     
-    func statusItemClicked(sender: NSStatusBarButton!) {
+    func statusItemClicked(_ sender: NSStatusBarButton!) {
         
         let event:NSEvent! = NSApp.currentEvent!
         
-        if (event.type == NSEventType.RightMouseUp) {
+        if (event.type == NSEventType.rightMouseUp) {
             
             let menu = NSMenu()
             
             //        menu.addItem(NSMenuItem.separatorItem())
             menu.addItem(NSMenuItem(title: "Quit", action: #selector(quit), keyEquivalent: ""))
             statusItem.menu = menu
-            statusItem.popUpStatusItemMenu(menu)
+            statusItem.popUpMenu(menu)
             statusItem.menu = nil
             
-        } else if (event.type == NSEventType.LeftMouseDown) {
+        } else if (event.type == NSEventType.leftMouseDown) {
             
-            if popover.shown {
+            if popover.isShown {
                 hidePopover(sender)
             } else {
                 showPopover(sender)
@@ -93,17 +93,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSUserNot
     }
     
     
-    func menuDidClose(menu: NSMenu) {
+    func menuDidClose(_ menu: NSMenu) {
         statusItem.menu = nil
     }
     
     
-    func applicationWillTerminate(aNotification: NSNotification) {
+    func applicationWillTerminate(_ aNotification: Notification) {
         // Insert code here to tear down your application
     }
     
     
-    func userNotificationCenter(center: NSUserNotificationCenter, shouldPresentNotification notification: NSUserNotification) -> Bool {
+    func userNotificationCenter(_ center: NSUserNotificationCenter, shouldPresent notification: NSUserNotification) -> Bool {
         return true
     }
     
@@ -114,7 +114,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSUserNot
         notification.title = "SimpleTimer"
         notification.informativeText = "It is about time!"
         //        notification.soundName = NSUserNotificationDefaultSoundName
-        NSUserNotificationCenter.defaultUserNotificationCenter().deliverNotification(notification)
+        NSUserNotificationCenter.default.deliver(notification)
     }
     
     
