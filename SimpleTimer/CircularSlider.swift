@@ -39,6 +39,7 @@ class CircularSlider: NSControl {
     var arcDirection:Int32 = 1
     var alarmIsDue:Bool = false
     var modusString:String = "stopWatchMode_paused"
+    var alarmTime:CFAbsoluteTime!
     
     
     // ----------------------------------------------------------------------------------------------------
@@ -73,8 +74,8 @@ class CircularSlider: NSControl {
         
         
         timerField = NSLabel(frame: timeFieldRect)
-        
         timerField?.isEditable = true
+        timerField.selectText(nil)
         timerField?.target = self
         timerField?.action = #selector(enterTimerField)
         timerField?.textColor = NSColor.black
@@ -107,6 +108,7 @@ class CircularSlider: NSControl {
         alarmTimeField?.stringValue = "--:--"
         
         addSubview(alarmTimeField!)
+        
     }
     
     
@@ -144,11 +146,14 @@ class CircularSlider: NSControl {
         
     
     
-        NSColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0).set()
-    
         ctx.setLineWidth(Config.CS_LINE_WIDTH)
         ctx.setLineCap(CGLineCap.butt)
-        ctx.setStrokeColor(NSColor.orange.cgColor)
+        
+        let red_val  = CGFloat(2.0*(1.0/(1.0+exp(-2000.0/Double(secondsLeft)))-0.5))
+        let blue_val = CGFloat(2.0/(1.0+exp(2000.0/Double(secondsLeft))))
+
+        
+        ctx.setStrokeColor(NSColor(red: red_val, green: 0.0, blue: blue_val, alpha: 1.0).cgColor)
         ctx.drawPath(using: CGPathDrawingMode.fillStroke)
         
 
@@ -249,6 +254,7 @@ class CircularSlider: NSControl {
     
     
     override func mouseDown(with theEvent: NSEvent) {
+        
         if theEvent.clickCount == 1 {
             return
         }
@@ -307,11 +313,13 @@ class CircularSlider: NSControl {
             
             
             if (modusString == "stopWatchMode_paused") {
+                alarmTime = CFAbsoluteTimeGetCurrent() - Double(secondsLeft)
                 modusString = "stopWatchMode"
             }
             
             
             if (modusString == "countDownMode_paused") {
+                alarmTime = CFAbsoluteTimeGetCurrent() + Double(secondsLeft)
                 modusString = "countDownMode"
             }
         }
@@ -331,9 +339,9 @@ class CircularSlider: NSControl {
     func timerTask() {
         
         if (modusString == "stopWatchMode") {
-            secondsLeft = secondsLeft + 1
+            secondsLeft = lround(CFAbsoluteTimeGetCurrent() - alarmTime)
         } else {
-            secondsLeft = secondsLeft - 1
+            secondsLeft = lround(alarmTime - CFAbsoluteTimeGetCurrent())
         }
         
         calcAngleFromSecondsLeft()
@@ -350,7 +358,7 @@ class CircularSlider: NSControl {
         //        }
         
         
-        if (secondsLeft == 0) && (modusString == "countDownMode") {
+        if (secondsLeft <= 0) && (modusString == "countDownMode") {
             let appDelegate = NSApplication.shared().delegate as! AppDelegate
             
             if (!alarmIsDue) {
@@ -360,6 +368,7 @@ class CircularSlider: NSControl {
             
             // App enters stopWatch mode, i.e., starts counting seconds up
             modusString = "stopWatchMode"
+            secondsLeft = abs(secondsLeft)
             
         }
     }
@@ -400,6 +409,7 @@ class CircularSlider: NSControl {
     
     
     func updateAlarmTimeField() {
+        
         if (modusString == "stopWatchMode") || (modusString == "stopWatchMode_paused") {
             resetAlarmTimeField()
         } else {
@@ -412,10 +422,13 @@ class CircularSlider: NSControl {
             
             alarmTimeField!.stringValue = dateFormatter.string(from: calculatedDate)
         }
+        
+        
     }
     
     
     func resetAlarmTimeField() {
+        
         alarmTimeField!.stringValue = "--:--"
     }
     
