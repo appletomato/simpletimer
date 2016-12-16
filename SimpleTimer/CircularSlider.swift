@@ -129,22 +129,29 @@ class CircularSlider: NSControl {
         ctx.addArc(center: CGPoint(x: CGFloat(self.frame.size.width/2), y: CGFloat(self.frame.size.height/2)), radius: 5*radius!, startAngle: 0, endAngle: CGFloat(M_PI*2.0), clockwise: true)
         
         
-        // Set fill/stroke color
         if (alarmIsDue) {
             NSColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0).set()
         } else {
             NSColor.clear.set()
         }
         
-        ctx.setLineWidth(Config.CS_LINE_WIDTH)
         ctx.drawPath(using: CGPathDrawingMode.fillStroke)
         
         
-        
         // Draw the time indicator
+        ctx.addArc(center: CGPoint(x: CGFloat(self.frame.size.width/2), y: CGFloat(self.frame.size.height/2)), radius: radius!, startAngle: 0, endAngle: CGFloat(M_PI*2.0), clockwise: true)
+        
+        
+        ctx.setLineWidth(1.0)
+        ctx.setLineCap(CGLineCap.butt)
+        
+        ctx.setStrokeColor(NSColor.lightGray.cgColor)
+        ctx.setShadow(offset: CGSize(width: 0, height: 0), blur: 2.0, color: NSColor.lightGray.cgColor)
+        ctx.drawPath(using: CGPathDrawingMode.fillStroke)
+        
+        
         ctx.addArc(center: CGPoint(x: CGFloat(self.frame.size.width/2), y: CGFloat(self.frame.size.height/2)), radius: radius!, startAngle: CGFloat(M_PI/2.0), endAngle: CGFloat(-1.0*DegreesToRadians(Double(angle))+M_PI/2.0), clockwise: Bool(arcDirection as NSNumber))
         
-    
     
         ctx.setLineWidth(Config.CS_LINE_WIDTH)
         ctx.setLineCap(CGLineCap.butt)
@@ -154,6 +161,7 @@ class CircularSlider: NSControl {
 
         
         ctx.setStrokeColor(NSColor(red: red_val, green: 0.0, blue: blue_val, alpha: 1.0).cgColor)
+        ctx.setShadow(offset: CGSize(width: 0, height: 0), blur: 0.0, color: NSColor.white.cgColor)
         ctx.drawPath(using: CGPathDrawingMode.fillStroke)
         
 
